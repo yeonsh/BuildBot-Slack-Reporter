@@ -153,13 +153,7 @@ class SlackStatusPush(HttpStatusPushBase):
             urls.append('/v2/user/{}/message'.format(postData.pop('id_or_email')))
         if 'room_id_or_name' in postData:
             urls.append('/v2/room/{}/notification'.format(postData.pop('room_id_or_name')))
-
-            
-            
-        #{
-        #"text": "This is a line of text.\nAnd this is another one."
-        #"username": "cabomabot"
-        #}
+	
         for url in urls:
             response = yield self._http.post(url, params=dict(auth_token=self.auth_token), json=postData)
             if response.code != 200:
