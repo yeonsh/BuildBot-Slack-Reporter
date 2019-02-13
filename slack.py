@@ -17,6 +17,20 @@ HOSTED_BASE_URL = "https://api.slack.com"
 class SlackStatusPush(HttpStatusPushBase):
     name = "SlackStatusPush"
 
+    #map buildbot to slack color 
+    BUILD_RESULT = {
+        'success': '#8d4',
+        'warnings': 'warning',
+        'failure': '#ff0000', #red
+        'skipped': '#AADDEE',
+        'exception': '#c6c',
+        'retry': '#ecc',
+        'cancelled': '#ecc',
+        None: 'warning',
+    }
+
+
+
     def checkConfig(self, auth_token, endpoint=HOSTED_BASE_URL,
                     builder_room_map=None, builder_user_map=None,
                     event_messages=None, **kwargs):
@@ -80,8 +94,54 @@ class SlackStatusPush(HttpStatusPushBase):
     # use this as an extension point to inject extra parameters into your
     # postData
     def getExtraParams(self, build, event_name):
-        return {}
 
+        state_message = build['state_string']  # // build text
+        build_url = build['url']
+        builder_name = build['builder']['name']
+        build_number = build['number']
+
+        build_properties = build['properties']
+        build_commit_description = build_properties['commit-description']
+        build_owner = build_properties['owner']
+        build_worker_name = build_properties['workername'] # for environment
+
+        #CUSTOM VALUE
+        Build_Version = build_properties.get('Build_Version', "Unknown")
+
+        slack_message = {
+	            "username" : build_owner,
+                "attachments": [
+                    {
+                        "fallback": "%s - %s" % (state_message,build_url),
+                        "text": "<%s|%s # %s> - %s" %(build_url, builder_name, build_number,state_message),
+                        "fields": [
+                            {
+                                "title": "Tag",
+                                "value": build_commit_description,
+                                "short": "true"
+                            },
+				            {
+                                "title": "Version",
+                                "value": Build_Version,
+                                "short": "true"
+                            },
+                            {
+                                "title": "Worker",
+                                "value": build_worker_name,
+                                "short": "true"
+                            }
+                        ],
+                        "color": self.BUILD_RESULT[statusToString(build['results'])]
+                    }
+                ]
+            }
+
+        
+        
+
+        return slack_message
+
+    # TODO : send slack message using api
     @defer.inlineCallbacks
     def send(self, build, key):
         postData = yield self.getBuildDetailsAndSendMessage(build, key)
@@ -94,6 +154,12 @@ class SlackStatusPush(HttpStatusPushBase):
         if 'room_id_or_name' in postData:
             urls.append('/v2/room/{}/notification'.format(postData.pop('room_id_or_name')))
 
+            
+            
+        #{
+        #"text": "This is a line of text.\nAnd this is another one."
+        #"username": "cabomabot"
+        #}
         for url in urls:
             response = yield self._http.post(url, params=dict(auth_token=self.auth_token), json=postData)
             if response.code != 200:
