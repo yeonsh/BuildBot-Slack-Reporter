@@ -11,11 +11,11 @@ from buildbot.util.logger import Logger
 
 log = Logger()
 
-HOSTED_BASE_URL = "https://api.hipchat.com"
+HOSTED_BASE_URL = "https://api.slack.com"
 
 
-class HipChatStatusPush(HttpStatusPushBase):
-    name = "HipChatStatusPush"
+class SlackStatusPush(HttpStatusPushBase):
+    name = "SlackStatusPush"
 
     def checkConfig(self, auth_token, endpoint=HOSTED_BASE_URL,
                     builder_room_map=None, builder_user_map=None,
@@ -30,7 +30,7 @@ class HipChatStatusPush(HttpStatusPushBase):
             config.error('builder_user_map must be a dict')
 
     @defer.inlineCallbacks
-    def reconfigService(self, auth_token, endpoint="https://api.hipchat.com",
+    def reconfigService(self, auth_token, endpoint="https://api.slack.com",
                         builder_room_map=None, builder_user_map=None,
                         event_messages=None, **kwargs):
         auth_token = yield self.renderSecrets(auth_token)
