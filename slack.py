@@ -120,7 +120,8 @@ class SlackStatusPush(HttpStatusPushBase):
         # build finished message
         build_properties = build['properties']
         build_commit_description = build_properties['commit-description']
-        build_owner = build_properties['owner']
+	#currently testing with 1 user
+        #build_owner = build_properties['owner']
         build_worker_name = build_properties['workername'] # for environment
 
         #CUSTOM VALUE
