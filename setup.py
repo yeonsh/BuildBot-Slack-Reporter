@@ -1,10 +1,10 @@
 from distutils.core import setup
 
 setup(
-    name='Slack-Reporter',
+    name='Slack_Reporter',
     version='0.0.1',
     author=['Michal Wozniak'],
-    packages=[],
+    packages=["Slack_Reporter"]
     scripts=[],
     url='https://github.com/mv740/BuildBot-Slack-Reporter',
     license='LICENSE.txt',
@@ -13,9 +13,7 @@ setup(
     install_requires=[
         "buildbot >= 1.4.0",
     ],
-    entry_points={
-        'buildbot.reporters': [
-            'slack= GitLabStatusPush:main',
-        ],
-    }
+    keywords=["buildbot", "slack", "monitoring"],
+    entry_points = {
+            'buildbot.reporters': 'slack = Slack_Reporter:SlackStatusPush'}
 )
