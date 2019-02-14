@@ -4,7 +4,7 @@ setup(
     name='Slack_Reporter',
     version='0.0.1',
     author=['Michal Wozniak'],
-    packages=["Slack_Reporter"]
+    packages=["Slack_Reporter"],
     scripts=[],
     url='https://github.com/mv740/BuildBot-Slack-Reporter',
     license='LICENSE.txt',
