@@ -13,4 +13,9 @@ setup(
     install_requires=[
         "buildbot >= 1.4.0",
     ],
+    entry_points={
+        'buildbot.reporters': [
+            'slack= GitLabStatusPush:main',
+        ],
+    }
 )
