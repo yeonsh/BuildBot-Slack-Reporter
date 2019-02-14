@@ -15,5 +15,5 @@ setup(
     ],
     keywords=["buildbot", "slack", "monitoring"],
     entry_points = {
-            'buildbot.reporters': 'slack = SlackStatusPush'}
+            'buildbot.reporters': 'SlackStatusPush = buildot.reporter.slack:SlackStatusPush '}
 )
