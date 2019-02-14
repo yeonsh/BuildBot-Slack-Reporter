@@ -15,7 +15,9 @@ HOSTED_BASE_URL = "https://slack.com"
 
 
 class SlackStatusPush(HttpStatusPushBase):
-    name = "SlackStatusPush"
+    name = "SlackStatusPush",
+    namespace = 'buildbot'
+
 
     #map buildbot to slack color 
     BUILD_RESULT = {
