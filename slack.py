@@ -74,7 +74,7 @@ class SlackStatusPush(HttpStatusPushBase):
         postData['message'] = yield self.getMessage(build, key)
         extra_params = yield self.getExtraParams(build, key)
         postData.update(extra_params)
-        return postData
+        defer.returnValue(postData)
 
     def getRecipientList(self, build, event_name):
         result = {}
