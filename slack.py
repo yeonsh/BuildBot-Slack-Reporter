@@ -11,7 +11,7 @@ from buildbot.util.logger import Logger
 
 log = Logger()
 
-HOSTED_BASE_URL = "https://api.slack.com"
+HOSTED_BASE_URL = "https://slack.com"
 
 
 class SlackStatusPush(HttpStatusPushBase):
@@ -44,7 +44,7 @@ class SlackStatusPush(HttpStatusPushBase):
             config.error('builder_user_map must be a dict')
 
     @defer.inlineCallbacks
-    def reconfigService(self, auth_token, endpoint="https://api.slack.com",
+    def reconfigService(self, auth_token, endpoint="https://slack.com",
                         builder_room_map=None, builder_user_map=None,
                         event_messages=None, **kwargs):
         auth_token = yield self.renderSecrets(auth_token)
@@ -108,8 +108,9 @@ class SlackStatusPush(HttpStatusPushBase):
         #CUSTOM VALUE
         Build_Version = build_properties.get('Build_Version', "Unknown")
 
+        #https://api.slack.com/docs/messages#how_to_send_messages
         slack_message = {
-	            "username" : build_owner,
+                "channel" : "",
                 "attachments": [
                     {
                         "fallback": "%s - %s" % (state_message,build_url),
@@ -136,9 +137,6 @@ class SlackStatusPush(HttpStatusPushBase):
                 ]
             }
 
-        
-        
-
         return slack_message
 
     # TODO : send slack message using api
@@ -147,16 +145,25 @@ class SlackStatusPush(HttpStatusPushBase):
         postData = yield self.getBuildDetailsAndSendMessage(build, key)
         if not postData or 'message' not in postData or not postData['message']:
             return
+        
+        message = postData['slack_message'] 
+        postDataSlack = message
+        postDataSlack["channel"] = postData["room_id_or_name"]
 
         urls = []
-        if 'id_or_email' in postData:
-            urls.append('/v2/user/{}/message'.format(postData.pop('id_or_email')))
-        if 'room_id_or_name' in postData:
-            urls.append('/v2/room/{}/notification'.format(postData.pop('room_id_or_name')))
-	
+        urls.append('/api/chat.postMessage')
+
+        # if 'id_or_email' in postData:
+        #     urls.append('/v2/user/{}/message'.format(postData.pop('id_or_email')))
+        # if 'room_id_or_name' in postData:
+        #     urls.append('/v2/room/{}/notification'.format(postData.pop('room_id_or_name')))
+
+        #####
+        # https://slack.com/api/chat.postMessage    
+            
         for url in urls:
-            response = yield self._http.post(url, params=dict(auth_token=self.auth_token), json=postData)
+            response = yield self._http.post(url, params=dict(auth_token=self.auth_token), json=postDataSlack)
             if response.code != 200:
                 content = yield response.content()
                 log.error("{code}: unable to upload status: {content}",
-                          code=response.code, content=content)
+                    code=response.code, content=content)
