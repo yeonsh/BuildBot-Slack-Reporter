@@ -4,7 +4,7 @@ setup(
     name='Slack_Reporter',
     version='0.0.1',
     author=['Michal Wozniak'],
-    packages=["buildbot.reporters"],
+    packages=[],
     scripts=[],
     url='https://github.com/mv740/BuildBot-Slack-Reporter',
     license='LICENSE.txt',
@@ -15,5 +15,5 @@ setup(
     ],
     keywords=["buildbot", "slack", "monitoring"],
     entry_points = {
-            'buildbot.reporters': 'slack = Slack_Reporter:SlackStatusPush'}
+            'buildbot.reporters': 'slack = SlackStatusPush'}
 )
