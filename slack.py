@@ -118,16 +118,20 @@ class SlackStatusPush(HttpStatusPushBase):
         if event_name == 'new':
             return slack_message
 
+        
         # build finished message
         build_properties = build['properties']
         build_commit_description = build_properties['commit-description']
-	#currently testing with 1 user
-        #build_owner = build_properties['owner']
+	
         build_worker_name = build_properties['workername'] # for environment
 
         #CUSTOM VALUE
         Build_Version = build_properties.get('Build_Version', "Unknown")
 
+        # TODO : Pass custom field option through checkConfig method (custom_build_field_list)
+        #  eg like builder_user_map ... 
+        #  custom_build_field_map = { 'build_properties' : [ 'VERSION']}   
+        #  try to find VERSION propert in build property if exist, add field
         #https://api.slack.com/docs/messages#how_to_send_messages
         slack_message['attachments'][0]['fields'] = [
                             {
@@ -144,7 +148,22 @@ class SlackStatusPush(HttpStatusPushBase):
                                 "title": "Worker",
                                 "value": build_worker_name,
                                 "short": "true"
-                            }]
+                            }
+                            
+                            ]
+
+        # Add Reponsable Users Field 
+        blamelist = yield utils.getResponsibleUsersForBuild(self.master, build['buildid'])
+        if len(blamelist) > 0:
+            message_fields =  slack_message['attachments'][0]['fields']
+            blamelist_str = ''.join(blamelist)
+
+            blameField =  {
+                                "title": "Responsable Users",
+                                "value": blamelist_str,
+                                "short": "true"
+                            }
+            message_fields.append(blameField)
 
         return slack_message
 
