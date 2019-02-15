@@ -28,7 +28,8 @@ class SlackStatusPush(HttpStatusPushBase):
         'exception': '#c6c',
         'retry': '#ecc',
         'cancelled': '#ecc',
-        None: 'warning',
+        'not finished' : 'warning',
+        'Invalid status': 'warning'
     }
 
 
