@@ -56,7 +56,8 @@ class SlackStatusPush(HttpStatusPushBase):
             self.master, endpoint,
             debug=self.debug, verify=self.verify)
 
-        self.auth_token = auth_token
+        token_format = 'Bearer %s' % (auth_token)
+        self.auth_token = token_format
         self.builder_room_map = builder_room_map
         self.builder_user_map = builder_user_map
 
@@ -185,6 +186,8 @@ class SlackStatusPush(HttpStatusPushBase):
         postDataSlack = message
         postDataSlack["channel"] = postData["room_id_or_name"]
 
+
+
         urls = []
         urls.append('/api/chat.postMessage')
 
@@ -197,8 +200,8 @@ class SlackStatusPush(HttpStatusPushBase):
         # https://slack.com/api/chat.postMessage    
             
         for url in urls:
-            response = yield self._http.post(url, params=dict(auth_token=self.auth_token), json=postDataSlack)
+            response = yield self._http.post(url, headers={'Authorization': self.auth_token}, json=postDataSlack)
             if response.code != 200:
                 content = yield response.content()
-                log.error("{code}: unable to upload status: {content}",
+                log.error("Slack Reporter {code}: unable to upload status: {content}",
                     code=response.code, content=content)
