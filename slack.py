@@ -119,7 +119,7 @@ class SlackStatusPush(HttpStatusPushBase):
 	
         # basic message for new event 
         if event_name == 'new':
-            return defer.returnValue(result)
+            defer.returnValue(result)
 
         
         # build finished message
