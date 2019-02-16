@@ -118,7 +118,7 @@ class SlackStatusPush(HttpStatusPushBase):
 	
         # basic message for new event 
         if event_name == 'new':
-            return result
+            return defer.returnValue(result)
 
         
         # build finished message
@@ -167,7 +167,7 @@ class SlackStatusPush(HttpStatusPushBase):
                             }
             message_fields.append(blameField)
 
-        return result
+        defer.returnValue(result)
 
     # TODO : send slack message using api
     @defer.inlineCallbacks
