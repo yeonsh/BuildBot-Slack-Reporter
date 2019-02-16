@@ -97,13 +97,14 @@ class SlackStatusPush(HttpStatusPushBase):
     # use this as an extension point to inject extra parameters into your
     # postData
     def getExtraParams(self, build, event_name):
+        result = {}
 
         state_message = build['state_string']  # // build text
         build_url = build['url']
         builder_name = build['builder']['name']
         build_number = build['number']
 
-        slack_message = {
+        result['slack_message'] = {
                 "channel" : "",
                 "attachments": [
                     {
@@ -114,22 +115,27 @@ class SlackStatusPush(HttpStatusPushBase):
                 ]
             }
 
+	
         # basic message for new event 
         if event_name == 'new':
-            return slack_message
+            return result
 
+        
         # build finished message
         build_properties = build['properties']
         build_commit_description = build_properties['commit-description']
-	#currently testing with 1 user
-        #build_owner = build_properties['owner']
+	
         build_worker_name = build_properties['workername'] # for environment
 
         #CUSTOM VALUE
         Build_Version = build_properties.get('Build_Version', "Unknown")
 
+        # TODO : Pass custom field option through checkConfig method (custom_build_field_list)
+        #  eg like builder_user_map ... 
+        #  custom_build_field_map = { 'build_properties' : [ 'VERSION']}   
+        #  try to find VERSION propert in build property if exist, add field
         #https://api.slack.com/docs/messages#how_to_send_messages
-        slack_message['attachments'][0]['fields'] = [
+        result['slack_message']['attachments'][0]['fields'] = [
                             {
                                 "title": "Tag",
                                 "value": build_commit_description,
@@ -144,16 +150,35 @@ class SlackStatusPush(HttpStatusPushBase):
                                 "title": "Worker",
                                 "value": build_worker_name,
                                 "short": "true"
-                            }]
+                            }
+                            
+                            ]
 
-        return slack_message
+        # Add Reponsable Users Field 
+        blamelist = yield utils.getResponsibleUsersForBuild(self.master, build['buildid'])
+        if len(blamelist) > 0:
+            message_fields =  result['slack_message']['attachments'][0]['fields']
+            blamelist_str = ''.join(blamelist)
+
+            blameField =  {
+                                "title": "Responsable Users",
+                                "value": blamelist_str,
+                                "short": "true"
+                            }
+            message_fields.append(blameField)
+
+        return result
 
     # TODO : send slack message using api
     @defer.inlineCallbacks
     def send(self, build, key):
         postData = yield self.getBuildDetailsAndSendMessage(build, key)
-        if not postData or 'message' not in postData or not postData['message']:
+        if not postData or 'message' not in postData or not postData['message'] :
             return
+
+        if 'slack_message' not in postData or not postData['slack_message'] :
+            return
+
         
         message = postData['slack_message'] 
         postDataSlack = message
