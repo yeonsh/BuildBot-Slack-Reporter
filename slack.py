@@ -96,6 +96,7 @@ class SlackStatusPush(HttpStatusPushBase):
 
     # use this as an extension point to inject extra parameters into your
     # postData
+    @defer.inlineCallbacks
     def getExtraParams(self, build, event_name):
         result = {}
 
