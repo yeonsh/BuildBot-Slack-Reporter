@@ -9,6 +9,8 @@ from buildbot.reporters.http import HttpStatusPushBase
 from buildbot.util import httpclientservice
 from buildbot.util.logger import Logger
 
+import utility as util
+
 log = Logger()
 
 HOSTED_BASE_URL = "https://slack.com"
@@ -127,14 +129,16 @@ class SlackStatusPush(HttpStatusPushBase):
         # build finished message
         build_properties = build.get('properties')
         if build_properties is not None:
+            #warning please use util.GetBuildPropertyValue(build_property, property_name)
 
-
-            build_commit_description = build_properties.get('commit-description')
+            build_commit_description = util.GetBuildPropertyValue(build_properties, 'commit-description')
     
-            build_worker_name = build_properties['workername'] # for environment
+            build_worker_name = util.GetBuildPropertyValue(build_properties,'workername') # for environment
+
 
             #CUSTOM VALUE
-            build_version = build_properties.get('Build_Version')
+            build_version = util.GetBuildPropertyValue(build_properties, 'Build_Version')
+            
 
             # TODO : Pass custom field option through checkConfig method (custom_build_field_list)
             #  eg like builder_user_map ... 
@@ -183,6 +187,8 @@ class SlackStatusPush(HttpStatusPushBase):
     @defer.inlineCallbacks
     def send(self, build, key):
         postData = yield self.getBuildDetailsAndSendMessage(build, key)
+        #print("print postData object")
+        #util.PrintDict(postData)
         if not postData or 'message' not in postData or not postData['message'] :
             return
 
