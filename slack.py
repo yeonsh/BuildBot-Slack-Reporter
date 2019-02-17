@@ -38,7 +38,7 @@ class SlackStatusPush(HttpStatusPushBase):
 
     def checkConfig(self, auth_token, endpoint=HOSTED_BASE_URL,
                     builder_room_map=None, builder_user_map=None,
-                    event_messages=None, **kwargs):
+                    event_messages=None, builder_custom_message_property=None, **kwargs):
         if not isinstance(auth_token, string_types):
             config.error('auth_token must be a string')
         if not isinstance(endpoint, string_types):
@@ -47,11 +47,14 @@ class SlackStatusPush(HttpStatusPushBase):
             config.error('builder_room_map must be a dict')
         if builder_user_map and not isinstance(builder_user_map, dict):
             config.error('builder_user_map must be a dict')
+        if builder_custom_message_property and not isinstance(builder_custom_message_property, dict):
+            config.error('builder_custom_message_property must be a dict')
+            
 
     @defer.inlineCallbacks
     def reconfigService(self, auth_token, endpoint="https://slack.com",
                         builder_room_map=None, builder_user_map=None,
-                        event_messages=None, **kwargs):
+                        event_messages=None,builder_custom_message_property=None, **kwargs):
         auth_token = yield self.renderSecrets(auth_token)
         yield HttpStatusPushBase.reconfigService(self, **kwargs)
         self._http = yield httpclientservice.HTTPClientService.getService(
@@ -62,6 +65,7 @@ class SlackStatusPush(HttpStatusPushBase):
         self.auth_token = token_format
         self.builder_room_map = builder_room_map
         self.builder_user_map = builder_user_map
+        self.builder_custom_message_property = builder_custom_message_property
 
     # returns a Deferred that returns None
     def buildStarted(self, key, build):
@@ -88,6 +92,12 @@ class SlackStatusPush(HttpStatusPushBase):
         if self.builder_room_map and builder_name in self.builder_room_map:
             result['room_id_or_name'] = self.builder_room_map[builder_name]
         return result
+
+    def getCustomMessageProperties(self, build, event_name):
+        builder_name = build['builder']['name']
+        if self.builder_custom_message_property and builder_name in self.builder_custom_message_property:
+            return self.builder_custom_message_property[builder_name]
+        return None
 
     def getMessage(self, build, event_name):
         event_messages = {
@@ -135,15 +145,6 @@ class SlackStatusPush(HttpStatusPushBase):
     
             build_worker_name = util.GetBuildPropertyValue(build_properties,'workername') # for environment
 
-
-            #CUSTOM VALUE
-            build_version = util.GetBuildPropertyValue(build_properties, 'Build_Version')
-            
-
-            # TODO : Pass custom field option through checkConfig method (custom_build_field_list)
-            #  eg like builder_user_map ... 
-            #  custom_build_field_map = { 'build_properties' : [ 'VERSION']}   
-            #  try to find VERSION propert in build property if exist, add field
             #https://api.slack.com/docs/messages#how_to_send_messages
             result['slack_message']['attachments'][0]['fields'] = []
 
@@ -155,13 +156,7 @@ class SlackStatusPush(HttpStatusPushBase):
                                     "short": "true"
                                 }
                 message_fields.append(commit_field)
-            if build_version is not None:
-                build_version_field = {
-                                    "title": "Version",
-                                    "value": build_version,
-                                    "short": "true"
-                                }
-                message_fields.append(build_version_field)
+
             if build_worker_name is not None:
                 worker_name_field = {
                                     "title": "Worker",
@@ -169,6 +164,18 @@ class SlackStatusPush(HttpStatusPushBase):
                                     "short": "true"
                                 }
                 message_fields.append(worker_name_field)
+
+            #add custom property
+            custom_message_properties = yield self.getCustomMessageProperties(build, event_name)
+            if custom_message_properties is not None:
+                for custom_property in custom_message_properties:
+                    custom_property_value = util.GetBuildPropertyValue(build_properties,custom_property) # for environment
+                    custom_property_field = {
+                                    "title": custom_property,
+                                    "value": custom_property_value,
+                                    "short": "true"
+                                }
+                    message_fields.append(custom_property_field)
 
             # Add Reponsable Users Field 
             blamelist = yield utils.getResponsibleUsersForBuild(self.master, build['buildid'])
@@ -187,8 +194,8 @@ class SlackStatusPush(HttpStatusPushBase):
     @defer.inlineCallbacks
     def send(self, build, key):
         postData = yield self.getBuildDetailsAndSendMessage(build, key)
-        #print("print postData object")
-        #util.PrintDict(postData)
+        print("print postData object")
+        util.PrintDict(postData)
         if not postData or 'message' not in postData or not postData['message'] :
             return
 
