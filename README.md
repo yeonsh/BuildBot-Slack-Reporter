@@ -1,5 +1,6 @@
 # BuildBot-Slack-Reporter
 
+> based on the [hipchat reporter](https://github.com/buildbot/buildbot/blob/master/master/buildbot/reporters/hipchat.py#L17)
 
 ## How to use 
 
@@ -37,4 +38,3 @@ c['services'].append(slackReporter)
   -  dict ( buildername - List of properties ) 
   - eg : TAG will create in one of runtests buildstep and will appear in the message
   
-
