@@ -11,7 +11,7 @@ setup(
     description='slack reporter plugin for buildbot',
     long_description=open('README.md').read(),
     install_requires=[
-        "buildbot >= 1.4.0",
+        "buildbot >= 1.3.0",
     ],
     keywords=["buildbot", "slack", "monitoring"],
     entry_points = {
